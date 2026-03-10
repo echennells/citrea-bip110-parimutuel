@@ -7,7 +7,7 @@ Both sides deposit cBTC into an escrow contract on [Citrea](https://citrea.xyz) 
 
 ## How It Works
 
-The bet is a parimutuel pool. Depositors on each side split the total pot proportionally. Anyone can deposit on either side before the bet resolves.
+The bet is a parimutuel pool. All deposits from both sides go into one pot. When the bet resolves, the winning side splits the entire pot in proportion to how much each winner deposited. For example, if the Passes pool has 3 BTC and the Fails pool has 1 BTC, and Passes wins, a depositor who put in 1 BTC of that 3 BTC gets 1/3 of the total 4 BTC pot (1.33 BTC). Anyone can deposit on either side before the bet resolves.
 
 The `prove()` function verifies a real Bitcoin transaction on-chain:
 1. `sha256(sha256(rawTx)) == wtxId` verifies the raw tx matches the claimed ID
