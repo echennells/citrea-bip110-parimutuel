@@ -93,6 +93,10 @@ The contract address is printed after deploy. The resume script is idempotent an
 | `scripts/witness_proof.py` | Generates witness Merkle proofs from mempool.space for any Bitcoin testnet4 tx |
 | `scripts/check_light_client.py` | Queries Citrea Light Client state (current height, block hashes) |
 
+## Disclaimer
+
+This contract is for testnet use only. It has not been audited by a professional security firm and should not be used with real funds. The only testing performed has been unit tests, end-to-end tests on Citrea testnet, and automated analysis with Trail of Bits open source tools (Slither, Echidna). Use at your own risk.
+
 ## Security
 
 Audited with [Trail of Bits](https://www.trailofbits.com/) tooling:
