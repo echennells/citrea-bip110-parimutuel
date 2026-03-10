@@ -2,17 +2,17 @@
 
 A trustless prediction market on whether BIP-110 is activated on Bitcoin.
 
-Both sides deposit cBTC into an escrow contract on [Citrea](https://citrea.xyz) (a Bitcoin L2). After the BIP-110 activation block, anyone can prove that a transaction with an OP_RETURN over 100 bytes was mined — if such a transaction exists, BIP-110 was not enforced and the **BIP-110-Fails** side wins. If nobody submits a valid proof within 2016 blocks (~2 weeks, one difficulty period), the funds go to the **BIP-110-Passes** side.
+Both sides deposit cBTC into an escrow contract on [Citrea](https://citrea.xyz) (a Bitcoin L2). After the BIP-110 activation block, anyone can prove that a transaction with an OP_RETURN over 100 bytes was mined. If such a transaction exists, BIP-110 was not enforced and the **BIP-110-Fails** side wins. If nobody submits a valid proof within 2016 blocks (~2 weeks, one difficulty period), the funds go to the **BIP-110-Passes** side.
 
 
 ## How It Works
 
-The bet is a parimutuel pool — depositors on each side split the total pot proportionally. Anyone can deposit on either side before the bet resolves.
+The bet is a parimutuel pool. Depositors on each side split the total pot proportionally. Anyone can deposit on either side before the bet resolves.
 
 The `prove()` function verifies a real Bitcoin transaction on-chain:
-1. `sha256(sha256(rawTx)) == wtxId` — proves the raw tx matches the claimed ID
-2. Citrea Light Client `verifyInclusion()` — proves the tx is in a real Bitcoin block via witness Merkle proof
-3. `OpReturnParser.parseOpReturns()` — extracts OP_RETURN data from the raw tx
+1. `sha256(sha256(rawTx)) == wtxId` verifies the raw tx matches the claimed ID
+2. Citrea Light Client `verifyInclusion()` verifies the tx is in a real Bitcoin block via witness Merkle proof
+3. `OpReturnParser.parseOpReturns()` extracts OP_RETURN data from the raw tx
 4. Checks if any OP_RETURN payload > 100 bytes
 
 ## Contracts
@@ -23,7 +23,7 @@ These are EVM smart contracts written in Solidity. Citrea is a Bitcoin L2 that r
 |----------|------|
 | `BIP110Bet.sol` | The main contract. Holds deposited cBTC in escrow, accepts Bitcoin transaction proofs to settle the bet, and pays out winners proportionally from the pool. |
 | `OpReturnParser.sol` | Parses raw Bitcoin transactions in Solidity. Handles SegWit, VarInt encoding, and PUSHDATA opcodes to extract OP_RETURN payloads and their sizes. |
-| `IBitcoinLightClient.sol` | Interface to Citrea's built-in Bitcoin Light Client — a system contract that tracks Bitcoin block headers and can verify that a transaction was included in a real Bitcoin block via witness Merkle proof. |
+| `IBitcoinLightClient.sol` | Interface to Citrea's built-in Bitcoin Light Client, a system contract that tracks Bitcoin block headers and can verify that a transaction was included in a real Bitcoin block via witness Merkle proof. |
 
 ## Setup
 
@@ -76,7 +76,7 @@ The light client can be slow on testnet. If the script crashes mid-run (RPC time
 BET_ADDR=0x... npx hardhat run scripts/resume-passes-wins.ts --network citrea
 ```
 
-The contract address is printed after deploy. The resume script is idempotent — it skips steps that already completed.
+The contract address is printed after deploy. The resume script is idempotent and skips steps that already completed.
 
 ## Helper Scripts
 
