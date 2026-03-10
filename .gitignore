@@ -5,3 +5,4 @@ artifacts
 typechain-types
 coverage
 coverage.json
+crytic-export

@@ -10,7 +10,7 @@ const config: HardhatUserConfig = {
     citrea: {
       url: "https://rpc.testnet.citrea.xyz",
       chainId: 5115,
-      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
+      accounts: [process.env.PRIVATE_KEY, process.env.PRIVATE_KEY_B].filter(Boolean) as string[],
     },
   },
 };
