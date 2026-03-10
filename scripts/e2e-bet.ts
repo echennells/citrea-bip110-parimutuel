@@ -3,9 +3,9 @@ import hre from "hardhat";
 /**
  * End-to-end test of BIP110Bet on Citrea testnet:
  * 1. Deploy BIP110Bet with deadline far in the future
- * 2. Deposit on both Pro and Anti sides
+ * 2. Deposit on both Passes and Fails sides
  * 3. Submit real 101-byte OP_RETURN proof from Bitcoin testnet4 block 123,716
- * 4. Withdraw winnings (anti side wins)
+ * 4. Withdraw winnings (fails side wins)
  */
 async function main() {
   const [signer] = await hre.ethers.getSigners();
@@ -49,20 +49,20 @@ async function main() {
   // --- Step 2: Deposit on both sides ---
   console.log("\n=== Step 2: Deposit ===");
 
-  console.log("Depositing", hre.ethers.formatEther(PRO_DEPOSIT), "cBTC on Pro side...");
-  const tx1 = await bet.deposit(0, { value: PRO_DEPOSIT }); // Side.Pro = 0
+  console.log("Depositing", hre.ethers.formatEther(PRO_DEPOSIT), "cBTC on Passes side...");
+  const tx1 = await bet.deposit(0, { value: PRO_DEPOSIT }); // Side.Passes = 0
   await tx1.wait();
-  console.log("Pro deposit tx:", tx1.hash);
+  console.log("Passes deposit tx:", tx1.hash);
 
-  console.log("Depositing", hre.ethers.formatEther(ANTI_DEPOSIT), "cBTC on Anti side...");
-  const tx2 = await bet.deposit(1, { value: ANTI_DEPOSIT }); // Side.Anti = 1
+  console.log("Depositing", hre.ethers.formatEther(ANTI_DEPOSIT), "cBTC on Fails side...");
+  const tx2 = await bet.deposit(1, { value: ANTI_DEPOSIT }); // Side.Fails = 1
   await tx2.wait();
-  console.log("Anti deposit tx:", tx2.hash);
+  console.log("Fails deposit tx:", tx2.hash);
 
-  console.log("Pro pool:", hre.ethers.formatEther(await bet.proPool()), "cBTC");
-  console.log("Anti pool:", hre.ethers.formatEther(await bet.antiPool()), "cBTC");
+  console.log("Passes pool:", hre.ethers.formatEther(await bet.passesPool()), "cBTC");
+  console.log("Fails pool:", hre.ethers.formatEther(await bet.failsPool()), "cBTC");
 
-  // --- Step 3: Submit proof (anti wins) ---
+  // --- Step 3: Submit proof (fails wins) ---
   console.log("\n=== Step 3: Prove (101-byte OP_RETURN from block 123,716) ===");
   const tx3 = await bet.prove(BLOCK_HEIGHT, RAW_TX, WTXID, PROOF, INDEX);
   const receipt3 = await tx3.wait();
@@ -70,11 +70,11 @@ async function main() {
   console.log("Gas used:", receipt3!.gasUsed.toString());
 
   const outcome = await bet.outcome();
-  console.log("Outcome:", outcome === 1n ? "AntiWins" : outcome === 2n ? "ProWins" : "Unresolved");
+  console.log("Outcome:", outcome === 1n ? "FailsWins" : outcome === 2n ? "PassesWins" : "Unresolved");
   console.log("Resolved:", await bet.resolved());
   console.log("Proven wtxId:", await bet.provenWtxId());
 
-  // --- Step 4: Withdraw (anti side wins, we deposited on anti) ---
+  // --- Step 4: Withdraw (fails side wins, we deposited on fails) ---
   console.log("\n=== Step 4: Withdraw ===");
   const balBefore = await hre.ethers.provider.getBalance(addr);
 

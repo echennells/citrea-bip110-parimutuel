@@ -1,19 +1,19 @@
 import hre from "hardhat";
 
 /**
- * E2E test: Anti wins via proof
+ * E2E test: BIP-110-Fails wins via proof
  *
  * 1. Deploy BIP110Bet (deadline = lcHeight + 1000)
- * 2. Wallet A deposits on Pro side
- * 3. Wallet B deposits on Anti side
- * 4. Submit real 101-byte OP_RETURN proof from Bitcoin testnet4 block 123,716
+ * 2. Wallet A deposits on Passes side
+ * 3. Wallet B deposits on Fails side
+ * 4. Submit real 101-byte OP_RETURN proof from Bitcoin testnet4 block 125,274
  * 5. Wallet B (winner) withdraws — gets entire pool
  * 6. Wallet A (loser) tries to withdraw — reverts
  */
 async function main() {
   const [walletA, walletB] = await hre.ethers.getSigners();
-  console.log("Wallet A (Pro):", await walletA.getAddress());
-  console.log("Wallet B (Anti):", await walletB.getAddress());
+  console.log("Wallet A (Passes):", await walletA.getAddress());
+  console.log("Wallet B (Fails):", await walletB.getAddress());
 
   const balA = await hre.ethers.provider.getBalance(walletA.address);
   const balB = await hre.ethers.provider.getBalance(walletB.address);
@@ -46,28 +46,28 @@ async function main() {
   console.log("BIP110Bet deployed at:", await bet.getAddress());
   console.log("Deadline:", DEADLINE);
 
-  // --- Step 2: Wallet A deposits Pro ---
-  console.log("\n=== Step 2: Wallet A deposits Pro ===");
+  // --- Step 2: Wallet A deposits Passes ---
+  console.log("\n=== Step 2: Wallet A deposits Passes ===");
   const tx1 = await bet.connect(walletA).deposit(0, { value: DEPOSIT });
   await tx1.wait();
   console.log("Tx:", tx1.hash);
 
-  // --- Step 3: Wallet B deposits Anti ---
-  console.log("\n=== Step 3: Wallet B deposits Anti ===");
+  // --- Step 3: Wallet B deposits Fails ---
+  console.log("\n=== Step 3: Wallet B deposits Fails ===");
   const tx2 = await bet.connect(walletB).deposit(1, { value: DEPOSIT });
   await tx2.wait();
   console.log("Tx:", tx2.hash);
 
-  console.log("Pro pool:", hre.ethers.formatEther(await bet.proPool()), "cBTC");
-  console.log("Anti pool:", hre.ethers.formatEther(await bet.antiPool()), "cBTC");
+  console.log("Passes pool:", hre.ethers.formatEther(await bet.passesPool()), "cBTC");
+  console.log("Fails pool:", hre.ethers.formatEther(await bet.failsPool()), "cBTC");
 
-  // --- Step 4: Prove (anti wins) ---
+  // --- Step 4: Prove (bip-110-fails wins) ---
   console.log("\n=== Step 4: Prove (101-byte OP_RETURN) ===");
   const tx3 = await bet.prove(BLOCK_HEIGHT, RAW_TX, WTXID, PROOF, INDEX);
   const receipt3 = await tx3.wait();
   console.log("Tx:", tx3.hash);
   console.log("Gas used:", receipt3!.gasUsed.toString());
-  console.log("Outcome:", (await bet.outcome()) === 1n ? "AntiWins" : "???");
+  console.log("Outcome:", (await bet.outcome()) === 1n ? "FailsWins" : "???");
 
   // --- Step 5: Wallet B withdraws (winner) ---
   console.log("\n=== Step 5: Wallet B withdraws (winner) ===");
@@ -95,7 +95,7 @@ async function main() {
   console.log("Wallet A:", hre.ethers.formatEther(await hre.ethers.provider.getBalance(walletA.address)), "cBTC");
   console.log("Wallet B:", hre.ethers.formatEther(await hre.ethers.provider.getBalance(walletB.address)), "cBTC");
 
-  console.log("\n=== E2E Anti-Wins Complete ===");
+  console.log("\n=== E2E BIP-110-Fails-Wins Complete ===");
 }
 
 main().catch((error) => {

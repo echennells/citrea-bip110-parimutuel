@@ -1,22 +1,22 @@
 import hre from "hardhat";
 
 /**
- * Resume script for e2e-pro-wins.ts
+ * Resume script for e2e-passes-wins.ts
  *
- * Use this when the main e2e-pro-wins.ts script crashes mid-run
+ * Use this when the main e2e-passes-wins.ts script crashes mid-run
  * (e.g. RPC timeout, computer sleep, network drop). The contract
  * is already deployed and funded — this picks up from where it
  * left off: waits for the light client, calls claimTimeout, and
  * runs the withdraw/revert checks.
  *
  * Usage:
- *   BET_ADDR=0x... npx hardhat run scripts/resume-pro-wins.ts --network citrea
+ *   BET_ADDR=0x... npx hardhat run scripts/resume-passes-wins.ts --network citrea
  */
 async function main() {
   const BET_ADDR = process.env.BET_ADDR;
   if (!BET_ADDR) {
     console.error("Missing BET_ADDR environment variable.");
-    console.error("Usage: BET_ADDR=0x... npx hardhat run scripts/resume-pro-wins.ts --network citrea");
+    console.error("Usage: BET_ADDR=0x... npx hardhat run scripts/resume-passes-wins.ts --network citrea");
     process.exit(1);
   }
 
@@ -57,7 +57,7 @@ async function main() {
     console.log("Tx:", tx3.hash);
     console.log("Gas used:", receipt3!.gasUsed.toString());
   }
-  console.log("Outcome:", (await bet.outcome()) === 2n ? "ProWins" : "???");
+  console.log("Outcome:", (await bet.outcome()) === 2n ? "PassesWins" : "???");
 
   // Wallet A withdraws (winner) — skip if already claimed
   if (await bet.claimed(walletA.address)) {
@@ -86,7 +86,7 @@ async function main() {
   console.log("\n=== Final Balances ===");
   console.log("Wallet A:", hre.ethers.formatEther(await hre.ethers.provider.getBalance(walletA.address)), "cBTC");
   console.log("Wallet B:", hre.ethers.formatEther(await hre.ethers.provider.getBalance(walletB.address)), "cBTC");
-  console.log("\n=== E2E Pro-Wins Complete ===");
+  console.log("\n=== E2E BIP-110-Passes-Wins Complete ===");
 }
 
 main().catch((error) => {

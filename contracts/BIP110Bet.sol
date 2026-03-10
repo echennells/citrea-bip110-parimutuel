@@ -4,12 +4,12 @@ pragma solidity ^0.8.27;
 import "./interfaces/IBitcoinLightClient.sol";
 import "./OpReturnParser.sol";
 
-/// @title BIP110Bet — Phase 3: Escrow betting pool on whether >100 byte OP_RETURNs exist
-/// @notice Both sides deposit cBTC. Anti-BIP-110 wins by proving a >100 byte OP_RETURN
-///         was mined before the deadline. Pro-BIP-110 wins if no proof is submitted.
+/// @title BIP110Bet — Escrow betting pool on whether >100 byte OP_RETURNs exist
+/// @notice Both sides deposit cBTC. BIP-110-Fails wins by proving a >100 byte OP_RETURN
+///         was mined before the deadline. BIP-110-Passes wins if no proof is submitted.
 contract BIP110Bet {
-    enum Side { Pro, Anti }
-    enum Outcome { Unresolved, AntiWins, ProWins }
+    enum Side { Passes, Fails }
+    enum Outcome { Unresolved, FailsWins, PassesWins }
 
     IBitcoinLightClient public immutable LIGHT_CLIENT;
     OpReturnParser public immutable parser;
@@ -19,10 +19,10 @@ contract BIP110Bet {
     bool public resolved;
     bytes32 public provenWtxId;
 
-    uint256 public proPool;
-    uint256 public antiPool;
-    mapping(address => uint256) public proDeposits;
-    mapping(address => uint256) public antiDeposits;
+    uint256 public passesPool;
+    uint256 public failsPool;
+    mapping(address => uint256) public passesDeposits;
+    mapping(address => uint256) public failsDeposits;
     mapping(address => bool) public claimed;
 
     event Deposited(address indexed depositor, Side side, uint256 amount);
@@ -48,24 +48,24 @@ contract BIP110Bet {
         deadline = _deadline;
     }
 
-    /// @notice Deposit cBTC on either the Pro or Anti side
+    /// @notice Deposit cBTC on either the Passes or Fails side
     function deposit(Side side) external payable {
         if (resolved) revert AlreadyResolved();
         if (LIGHT_CLIENT.blockNumber() > deadline) revert DeadlinePassed();
         if (msg.value == 0) revert ZeroDeposit();
 
-        if (side == Side.Pro) {
-            proDeposits[msg.sender] += msg.value;
-            proPool += msg.value;
+        if (side == Side.Passes) {
+            passesDeposits[msg.sender] += msg.value;
+            passesPool += msg.value;
         } else {
-            antiDeposits[msg.sender] += msg.value;
-            antiPool += msg.value;
+            failsDeposits[msg.sender] += msg.value;
+            failsPool += msg.value;
         }
 
         emit Deposited(msg.sender, side, msg.value);
     }
 
-    /// @notice Prove a >100 byte OP_RETURN was mined before the deadline. Anti wins.
+    /// @notice Prove a >100 byte OP_RETURN was mined before the deadline. BIP-110-Fails wins.
     function prove(
         uint256 blockHeight,
         bytes calldata rawTx,
@@ -100,23 +100,23 @@ contract BIP110Bet {
         }
         if (!hasLarge) revert NoLargeOpReturn();
 
-        // 6. Resolve: Anti wins
+        // 6. Resolve: BIP-110-Fails wins
         resolved = true;
-        outcome = Outcome.AntiWins;
+        outcome = Outcome.FailsWins;
         provenWtxId = wtxId;
 
-        emit Resolved(Outcome.AntiWins, wtxId);
+        emit Resolved(Outcome.FailsWins, wtxId);
     }
 
-    /// @notice After deadline passes with no proof, resolve as Pro wins
+    /// @notice After deadline passes with no proof, resolve as BIP-110-Passes wins
     function claimTimeout() external {
         if (resolved) revert AlreadyResolved();
         if (LIGHT_CLIENT.blockNumber() <= deadline) revert DeadlineNotPassed();
 
         resolved = true;
-        outcome = Outcome.ProWins;
+        outcome = Outcome.PassesWins;
 
-        emit Resolved(Outcome.ProWins, bytes32(0));
+        emit Resolved(Outcome.PassesWins, bytes32(0));
     }
 
     /// @notice Winners withdraw their proportional share of the total pool
@@ -127,19 +127,19 @@ contract BIP110Bet {
         uint256 userDeposit;
         uint256 winningPool;
 
-        if (outcome == Outcome.ProWins) {
-            userDeposit = proDeposits[msg.sender];
-            winningPool = proPool;
+        if (outcome == Outcome.PassesWins) {
+            userDeposit = passesDeposits[msg.sender];
+            winningPool = passesPool;
         } else {
-            userDeposit = antiDeposits[msg.sender];
-            winningPool = antiPool;
+            userDeposit = failsDeposits[msg.sender];
+            winningPool = failsPool;
         }
 
         if (userDeposit == 0) revert NotWinner();
 
         claimed[msg.sender] = true;
 
-        uint256 totalPool = proPool + antiPool;
+        uint256 totalPool = passesPool + failsPool;
         uint256 payout = (userDeposit * totalPool) / winningPool;
 
         (bool success,) = msg.sender.call{value: payout}("");

@@ -2,8 +2,8 @@
 
 A trustless prediction market on whether Bitcoin enforces the OP_RETURN size limit (BIP-110). Both sides deposit cBTC into an escrow contract on [Citrea](https://citrea.xyz) (a Bitcoin L2). The contract settles by verifying real Bitcoin transactions via Citrea's built-in Bitcoin Light Client.
 
-- **Anti-BIP-110** wins by proving a >100 byte OP_RETURN was mined before a deadline
-- **Pro-BIP-110** wins if no proof is submitted by the deadline
+- **BIP-110-Fails** wins by proving a >100 byte OP_RETURN was mined before a deadline
+- **BIP-110-Passes** wins if no proof is submitted by the deadline
 
 No oracle, no trusted third party. The only trust assumptions are Bitcoin PoW and the Citrea sequencer.
 
@@ -41,7 +41,7 @@ npm install
 cp .env.example .env  # add PRIVATE_KEY and PRIVATE_KEY_B
 ```
 
-Two wallets are needed for e2e tests (one bets Pro, the other Anti):
+Two wallets are needed for e2e tests (one bets Passes, the other Fails):
 ```
 PRIVATE_KEY=0x...    # Wallet A
 PRIVATE_KEY_B=0x...  # Wallet B
@@ -64,26 +64,26 @@ npx hardhat test
 
 Both resolution paths have been tested end-to-end on live Citrea testnet against real Bitcoin testnet4 transactions.
 
-### Anti wins (proof submitted)
+### BIP-110-Fails wins (proof submitted)
 
 ```bash
-npx hardhat run scripts/e2e-anti-wins.ts --network citrea
+npx hardhat run scripts/e2e-fails-wins.ts --network citrea
 ```
 
-Deploys contract, both wallets deposit, submits a real Bitcoin OP_RETURN proof (>100 bytes), anti side withdraws winnings, pro side correctly reverts.
+Deploys contract, both wallets deposit, submits a real Bitcoin OP_RETURN proof (>100 bytes), fails side withdraws winnings, passes side correctly reverts.
 
-### Pro wins (timeout)
+### BIP-110-Passes wins (timeout)
 
 ```bash
-npx hardhat run scripts/e2e-pro-wins.ts --network citrea
+npx hardhat run scripts/e2e-passes-wins.ts --network citrea
 ```
 
-Deploys contract, both wallets deposit, polls the Citrea light client until it passes the deadline, calls `claimTimeout()`, pro side withdraws.
+Deploys contract, both wallets deposit, polls the Citrea light client until it passes the deadline, calls `claimTimeout()`, passes side withdraws.
 
 The light client can be slow on testnet. If the script crashes mid-run (RPC timeout, computer sleep, etc.), resume with:
 
 ```bash
-BET_ADDR=0x... npx hardhat run scripts/resume-pro-wins.ts --network citrea
+BET_ADDR=0x... npx hardhat run scripts/resume-passes-wins.ts --network citrea
 ```
 
 The contract address is printed after deploy. The resume script is idempotent — it skips steps that already completed.

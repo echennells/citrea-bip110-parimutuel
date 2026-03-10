@@ -80,28 +80,28 @@ describe("BIP110Bet", function () {
   }
 
   describe("deposits", function () {
-    it("should accept pro deposits", async function () {
+    it("should accept passes deposits", async function () {
       const { bet, alice } = await deployFixture();
       const amount = hre.ethers.parseEther("1.0");
 
-      await expect(bet.connect(alice).deposit(0, { value: amount })) // Side.Pro = 0
+      await expect(bet.connect(alice).deposit(0, { value: amount })) // Side.Passes = 0
         .to.emit(bet, "Deposited")
         .withArgs(alice.address, 0, amount);
 
-      expect(await bet.proPool()).to.equal(amount);
-      expect(await bet.proDeposits(alice.address)).to.equal(amount);
+      expect(await bet.passesPool()).to.equal(amount);
+      expect(await bet.passesDeposits(alice.address)).to.equal(amount);
     });
 
-    it("should accept anti deposits", async function () {
+    it("should accept fails deposits", async function () {
       const { bet, bob } = await deployFixture();
       const amount = hre.ethers.parseEther("2.0");
 
-      await expect(bet.connect(bob).deposit(1, { value: amount })) // Side.Anti = 1
+      await expect(bet.connect(bob).deposit(1, { value: amount })) // Side.Fails = 1
         .to.emit(bet, "Deposited")
         .withArgs(bob.address, 1, amount);
 
-      expect(await bet.antiPool()).to.equal(amount);
-      expect(await bet.antiDeposits(bob.address)).to.equal(amount);
+      expect(await bet.failsPool()).to.equal(amount);
+      expect(await bet.failsDeposits(bob.address)).to.equal(amount);
     });
 
     it("should accumulate multiple deposits from same address", async function () {
@@ -112,8 +112,8 @@ describe("BIP110Bet", function () {
       await bet.connect(alice).deposit(0, { value: amount1 });
       await bet.connect(alice).deposit(0, { value: amount2 });
 
-      expect(await bet.proDeposits(alice.address)).to.equal(amount1 + amount2);
-      expect(await bet.proPool()).to.equal(amount1 + amount2);
+      expect(await bet.passesDeposits(alice.address)).to.equal(amount1 + amount2);
+      expect(await bet.passesPool()).to.equal(amount1 + amount2);
     });
 
     it("should reject zero deposit", async function () {
@@ -149,8 +149,8 @@ describe("BIP110Bet", function () {
     });
   });
 
-  describe("prove (anti wins)", function () {
-    it("should resolve to AntiWins on valid proof", async function () {
+  describe("prove (bip-110-fails wins)", function () {
+    it("should resolve to FailsWins on valid proof", async function () {
       const { bet, alice, bob } = await deployFixture();
       const wtxId = await computeWtxId(TX_101_BYTES);
 
@@ -161,7 +161,7 @@ describe("BIP110Bet", function () {
       // Prove
       await expect(bet.prove(100, TX_101_BYTES, wtxId, "0x", 0))
         .to.emit(bet, "Resolved")
-        .withArgs(1, wtxId); // Outcome.AntiWins = 1
+        .withArgs(1, wtxId); // Outcome.FailsWins = 1
 
       expect(await bet.resolved()).to.be.true;
       expect(await bet.outcome()).to.equal(1);
@@ -217,8 +217,8 @@ describe("BIP110Bet", function () {
     });
   });
 
-  describe("claimTimeout (pro wins)", function () {
-    it("should resolve to ProWins after deadline", async function () {
+  describe("claimTimeout (bip-110-passes wins)", function () {
+    it("should resolve to PassesWins after deadline", async function () {
       const { bet, mockLC, alice } = await deployFixture();
 
       await bet.connect(alice).deposit(0, { value: hre.ethers.parseEther("1.0") });
@@ -227,7 +227,7 @@ describe("BIP110Bet", function () {
 
       await expect(bet.claimTimeout())
         .to.emit(bet, "Resolved")
-        .withArgs(2, hre.ethers.ZeroHash); // Outcome.ProWins = 2
+        .withArgs(2, hre.ethers.ZeroHash); // Outcome.PassesWins = 2
 
       expect(await bet.resolved()).to.be.true;
       expect(await bet.outcome()).to.equal(2);
@@ -259,19 +259,19 @@ describe("BIP110Bet", function () {
   });
 
   describe("withdraw", function () {
-    it("should pay anti side proportionally when anti wins", async function () {
+    it("should pay fails side proportionally when fails wins", async function () {
       const { bet, alice, bob, carol } = await deployFixture();
 
-      // Pro deposits 3 ETH, Anti deposits: alice 1 ETH, bob 2 ETH
+      // Passes deposits 3 ETH, Fails deposits: alice 1 ETH, bob 2 ETH
       await bet.connect(carol).deposit(0, { value: hre.ethers.parseEther("3.0") });
       await bet.connect(alice).deposit(1, { value: hre.ethers.parseEther("1.0") });
       await bet.connect(bob).deposit(1, { value: hre.ethers.parseEther("2.0") });
 
-      // Anti wins via proof
+      // Fails wins via proof
       const wtxId = await computeWtxId(TX_101_BYTES);
       await bet.prove(100, TX_101_BYTES, wtxId, "0x", 0);
 
-      // Total pool = 6 ETH, anti pool = 3 ETH
+      // Total pool = 6 ETH, fails pool = 3 ETH
       // Alice gets 1/3 * 6 = 2 ETH, Bob gets 2/3 * 6 = 4 ETH
       const aliceBefore = await hre.ethers.provider.getBalance(alice.address);
       const tx1 = await bet.connect(alice).withdraw();
@@ -292,19 +292,19 @@ describe("BIP110Bet", function () {
       expect(bobPayout).to.equal(hre.ethers.parseEther("4.0"));
     });
 
-    it("should pay pro side proportionally when pro wins", async function () {
+    it("should pay passes side proportionally when passes wins", async function () {
       const { bet, mockLC, alice, bob, carol } = await deployFixture();
 
-      // Pro deposits: alice 1 ETH, bob 3 ETH. Anti deposits: carol 2 ETH
+      // Passes deposits: alice 1 ETH, bob 3 ETH. Fails deposits: carol 2 ETH
       await bet.connect(alice).deposit(0, { value: hre.ethers.parseEther("1.0") });
       await bet.connect(bob).deposit(0, { value: hre.ethers.parseEther("3.0") });
       await bet.connect(carol).deposit(1, { value: hre.ethers.parseEther("2.0") });
 
-      // Pro wins via timeout
+      // Passes wins via timeout
       await mockLC.setBlockNumber(DEADLINE + 1);
       await bet.claimTimeout();
 
-      // Total pool = 6 ETH, pro pool = 4 ETH
+      // Total pool = 6 ETH, passes pool = 4 ETH
       // Alice gets 1/4 * 6 = 1.5 ETH, Bob gets 3/4 * 6 = 4.5 ETH
       const aliceBefore = await hre.ethers.provider.getBalance(alice.address);
       const tx1 = await bet.connect(alice).withdraw();
@@ -351,14 +351,14 @@ describe("BIP110Bet", function () {
     it("should reject withdraw for losers", async function () {
       const { bet, alice, bob } = await deployFixture();
 
-      await bet.connect(alice).deposit(0, { value: hre.ethers.parseEther("1.0") }); // Pro
-      await bet.connect(bob).deposit(1, { value: hre.ethers.parseEther("1.0") }); // Anti
+      await bet.connect(alice).deposit(0, { value: hre.ethers.parseEther("1.0") }); // Passes
+      await bet.connect(bob).deposit(1, { value: hre.ethers.parseEther("1.0") }); // Fails
 
-      // Anti wins
+      // Fails wins
       const wtxId = await computeWtxId(TX_101_BYTES);
       await bet.prove(100, TX_101_BYTES, wtxId, "0x", 0);
 
-      // Pro side (alice) tries to withdraw
+      // Passes side (alice) tries to withdraw
       await expect(
         bet.connect(alice).withdraw()
       ).to.be.revertedWithCustomError(bet, "NotWinner");

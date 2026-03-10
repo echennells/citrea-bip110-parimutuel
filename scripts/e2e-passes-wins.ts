@@ -1,24 +1,24 @@
 import hre from "hardhat";
 
 /**
- * E2E test: Pro wins via timeout
+ * E2E test: BIP-110-Passes wins via timeout
  *
- * 1. Deploy BIP110Bet (deadline = lcHeight + 50, already mined on Bitcoin)
- * 2. Wallet A deposits on Pro side
- * 3. Wallet B deposits on Anti side
+ * 1. Deploy BIP110Bet (deadline = lcHeight + 25, already mined on Bitcoin)
+ * 2. Wallet A deposits on Passes side
+ * 3. Wallet B deposits on Fails side
  * 4. Poll light client until it passes the deadline
- * 5. Call claimTimeout — Pro wins
+ * 5. Call claimTimeout — BIP-110-Passes wins
  * 6. Wallet A (winner) withdraws — gets entire pool
  * 7. Wallet B (loser) tries to withdraw — reverts
  *
  * If this script crashes mid-run (RPC timeout, network drop, computer sleep),
- * use resume-pro-wins.ts to pick up where it left off:
- *   BET_ADDR=0x... npx hardhat run scripts/resume-pro-wins.ts --network citrea
+ * use resume-passes-wins.ts to pick up where it left off:
+ *   BET_ADDR=0x... npx hardhat run scripts/resume-passes-wins.ts --network citrea
  */
 async function main() {
   const [walletA, walletB] = await hre.ethers.getSigners();
-  console.log("Wallet A (Pro):", await walletA.getAddress());
-  console.log("Wallet B (Anti):", await walletB.getAddress());
+  console.log("Wallet A (Passes):", await walletA.getAddress());
+  console.log("Wallet B (Fails):", await walletB.getAddress());
 
   const balA = await hre.ethers.provider.getBalance(walletA.address);
   const balB = await hre.ethers.provider.getBalance(walletB.address);
@@ -33,7 +33,7 @@ async function main() {
   const lcHeight = Number(await lc.blockNumber());
   console.log("\nLight Client height:", lcHeight);
 
-  // Deadline: 50 blocks ahead of light client.
+  // Deadline: 25 blocks ahead of light client.
   // Since the light client lags ~100 blocks behind Bitcoin tip,
   // these blocks are already mined — the LC just needs to catch up.
   const DEADLINE = lcHeight + 25;
@@ -49,22 +49,22 @@ async function main() {
   const betAddr = await bet.getAddress();
   console.log("BIP110Bet deployed at:", betAddr);
   console.log("(save this address — if the script crashes, resume with:)");
-  console.log(`  BET_ADDR=${betAddr} npx hardhat run scripts/resume-pro-wins.ts --network citrea`);
+  console.log(`  BET_ADDR=${betAddr} npx hardhat run scripts/resume-passes-wins.ts --network citrea`);
 
-  // --- Step 2: Wallet A deposits Pro ---
-  console.log("\n=== Step 2: Wallet A deposits Pro ===");
+  // --- Step 2: Wallet A deposits Passes ---
+  console.log("\n=== Step 2: Wallet A deposits Passes ===");
   const tx1 = await bet.connect(walletA).deposit(0, { value: DEPOSIT });
   await tx1.wait();
   console.log("Tx:", tx1.hash);
 
-  // --- Step 3: Wallet B deposits Anti ---
-  console.log("\n=== Step 3: Wallet B deposits Anti ===");
+  // --- Step 3: Wallet B deposits Fails ---
+  console.log("\n=== Step 3: Wallet B deposits Fails ===");
   const tx2 = await bet.connect(walletB).deposit(1, { value: DEPOSIT });
   await tx2.wait();
   console.log("Tx:", tx2.hash);
 
-  console.log("Pro pool:", hre.ethers.formatEther(await bet.proPool()), "cBTC");
-  console.log("Anti pool:", hre.ethers.formatEther(await bet.antiPool()), "cBTC");
+  console.log("Passes pool:", hre.ethers.formatEther(await bet.passesPool()), "cBTC");
+  console.log("Fails pool:", hre.ethers.formatEther(await bet.failsPool()), "cBTC");
 
   // --- Step 4: Wait for light client to pass deadline ---
   console.log("\n=== Step 4: Waiting for Light Client to pass deadline ===");
@@ -80,13 +80,13 @@ async function main() {
   }
   console.log("Light Client passed deadline!");
 
-  // --- Step 5: Claim timeout (pro wins) ---
+  // --- Step 5: Claim timeout (bip-110-passes wins) ---
   console.log("\n=== Step 5: claimTimeout ===");
   const tx3 = await bet.claimTimeout();
   const receipt3 = await tx3.wait();
   console.log("Tx:", tx3.hash);
   console.log("Gas used:", receipt3!.gasUsed.toString());
-  console.log("Outcome:", (await bet.outcome()) === 2n ? "ProWins" : "???");
+  console.log("Outcome:", (await bet.outcome()) === 2n ? "PassesWins" : "???");
 
   // --- Step 6: Wallet A withdraws (winner) ---
   console.log("\n=== Step 6: Wallet A withdraws (winner) ===");
@@ -114,7 +114,7 @@ async function main() {
   console.log("Wallet A:", hre.ethers.formatEther(await hre.ethers.provider.getBalance(walletA.address)), "cBTC");
   console.log("Wallet B:", hre.ethers.formatEther(await hre.ethers.provider.getBalance(walletB.address)), "cBTC");
 
-  console.log("\n=== E2E Pro-Wins Complete ===");
+  console.log("\n=== E2E BIP-110-Passes-Wins Complete ===");
 }
 
 main().catch((error) => {
