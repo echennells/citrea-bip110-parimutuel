@@ -26,14 +26,6 @@ The `prove()` function verifies a real Bitcoin transaction on-chain:
 | `BIP110Verifier.sol` | Phase 2 predecessor â€” same verification, hashlock reveal instead of bet |
 | `IBitcoinLightClient.sol` | Interface to Citrea's system precompile at `0x31...0001` |
 
-## Deployed (Citrea Testnet, chain 5115)
-
-| Contract | Address |
-|----------|---------|
-| OpReturnParser | `0x5BB078C8aC361be88A27195307138A678562D281` |
-| BIP110Verifier | `0x54e5668929a6D8c80FAcB3fee3Ca430487224C1F` |
-| Bitcoin Light Client | `0x3100000000000000000000000000000000000001` (system precompile) |
-
 ## Setup
 
 ```bash
@@ -97,5 +89,7 @@ The contract address is printed after deploy. The resume script is idempotent â€
 
 ## Security
 
-- **Slither** static analysis: no critical findings. The reentrancy warning on `withdraw()` is a false positive (guarded by `claimed` mapping).
-- **Echidna** fuzz testing: 1M+ tests on OpReturnParser, all 5 properties passing (no panics, consistent counts, valid indices).
+Audited with [Trail of Bits](https://www.trailofbits.com/) tooling:
+
+- **Slither** (static analysis): no critical findings
+- **Echidna** (property-based fuzzing): 1M+ tests on OpReturnParser, all 5 invariant properties passing
