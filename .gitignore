@@ -6,3 +6,6 @@ typechain-types
 coverage
 coverage.json
 crytic-export
+contracts/BIP110Verifier.sol
+test/BIP110Verifier.test.ts
+ignition/modules/BIP110Verifier.ts

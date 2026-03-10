@@ -25,7 +25,6 @@ These are Solidity smart contracts (`.sol`) — the EVM language used by Citrea,
 |----------|------|
 | `BIP110Bet.sol` | The main contract. Holds deposited cBTC in escrow, accepts Bitcoin transaction proofs to settle the bet, and pays out winners proportionally from the pool. |
 | `OpReturnParser.sol` | Parses raw Bitcoin transactions in Solidity. Handles SegWit, VarInt encoding, and PUSHDATA opcodes to extract OP_RETURN payloads and their sizes. |
-| `BIP110Verifier.sol` | Earlier version of the verification logic. Same Bitcoin proof checking, but reveals a hashlock preimage instead of settling a bet. Kept for reference. |
 | `IBitcoinLightClient.sol` | Interface to Citrea's built-in Bitcoin Light Client — a system contract that tracks Bitcoin block headers and can verify that a transaction was included in a real Bitcoin block via witness Merkle proof. |
 
 ## Setup
@@ -51,7 +50,6 @@ npx hardhat test
 | Suite | Tests | Coverage |
 |-------|-------|----------|
 | BIP110Bet | 22 | Deposits, prove, timeout, withdraw, edge cases |
-| BIP110Verifier | 8 | Deploy, hashlock, preimage reveal |
 | OpReturnParser | 7 | hasOpReturn, parseOpReturns, firstOpReturnAsString |
 
 ## E2E Tests (Citrea Testnet)
