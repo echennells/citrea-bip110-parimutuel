@@ -32,7 +32,7 @@ npm install
 cp .env.example .env  # add PRIVATE_KEY and PRIVATE_KEY_B
 ```
 
-Two wallets are needed for e2e tests (one bets Passes, the other Fails):
+Two wallets are needed for end-to-end tests (one bets Passes, the other Fails):
 ```
 PRIVATE_KEY=0x...    # Wallet A
 PRIVATE_KEY_B=0x...  # Wallet B
@@ -50,7 +50,7 @@ npx hardhat test
 | BIP110Bet | 22 | Deposits, prove, timeout, withdraw, edge cases |
 | OpReturnParser | 7 | hasOpReturn, parseOpReturns, firstOpReturnAsString |
 
-## E2E Tests (Citrea Testnet)
+## End-to-End Tests (Citrea Testnet)
 
 Both resolution paths have been tested end-to-end on live Citrea testnet against real Bitcoin testnet4 transactions.
 
