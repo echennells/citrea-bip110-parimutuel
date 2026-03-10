@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-Witness Merkle Proof Generator for BIP110Verifier
+Witness Merkle Proof Generator for BIP110Bet
 
 Fetches a raw Bitcoin block from mempool.space, builds the witness Merkle tree,
 and extracts the proof path for a given transaction. Outputs the parameters
-needed to call BIP110Verifier.verifyAndReveal().
+needed to call BIP110Bet.prove().
 
 Usage:
     python scripts/witness_proof.py <txid>

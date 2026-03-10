@@ -17,9 +17,9 @@ The contract checks for >100 byte OP_RETURNs in real Bitcoin blocks via Citrea's
 
 ### Unit Tests (local Hardhat EVM, no network needed)
 ```bash
-npx hardhat test                              # all 29 tests
+npx hardhat test                              # all tests (22 bet + 7 parser)
 npx hardhat test test/BIP110Bet.test.ts       # just bet tests (22)
-npx hardhat test test/OpReturnParser.test.ts   # just parser tests (7)
+npx hardhat test test/OpReturnParser.test.ts  # just parser tests (7)
 ```
 
 ### Compile

@@ -23,7 +23,7 @@ async function main() {
   const lcHeight = await lc.blockNumber();
   console.log("Light Client height:", lcHeight.toString());
 
-  // Real proof data from Phase 2 (Bitcoin testnet4 block 123,716)
+  // Real proof data from Bitcoin testnet4 block 123,716
   const BLOCK_HEIGHT = 123716;
   const RAW_TX = "0x020000000001012e91af0e05799ed222f3f39226c98ca171bfb2ef8f02d6be788288c9cf04d1070100000000fdffffff020000000000000000686a4c6542495031313020506861736520323a2054727573746c657373204f505f52455455524e20766572696669636174696f6e2076696120436974726561204c6967687420436c69656e742070726f7665732074686973207478206973206d696e65642100000000909f0700000000001600145c7ff709dd2583e259c11d8d7a54a70055935c5202483045022100c084eb5aa7696211f68d82df8fd5dea79280fc1d3714564fe6d7a51d6a3de03302204ffa7615f4a3e00e0dda41aa6f2dd36dd4b0d3ecf48d9d3ae2805c760870b70f0121024d1cfad21abc0f7598885d016c898a3e4754c5dd13d909ecac63200205c682ad00000000";
   const WTXID = "0xafabd687c327b4df84c5c57c0c06c88b2b1be0142ef02e80e2366313e6a61f2f";
@@ -34,9 +34,9 @@ async function main() {
   const DEADLINE = Number(lcHeight) + 1000;
   console.log("Deadline:", DEADLINE);
 
-  // Deposit amounts (tiny — we only have ~0.002 cBTC)
-  const PRO_DEPOSIT = hre.ethers.parseEther("0.0001");
-  const ANTI_DEPOSIT = hre.ethers.parseEther("0.0002");
+  // Deposit amounts (tiny, we only have ~0.002 cBTC)
+  const PASSES_DEPOSIT = hre.ethers.parseEther("0.0001");
+  const FAILS_DEPOSIT = hre.ethers.parseEther("0.0002");
 
   // --- Step 1: Deploy ---
   console.log("\n=== Step 1: Deploy BIP110Bet ===");
@@ -49,13 +49,13 @@ async function main() {
   // --- Step 2: Deposit on both sides ---
   console.log("\n=== Step 2: Deposit ===");
 
-  console.log("Depositing", hre.ethers.formatEther(PRO_DEPOSIT), "cBTC on Passes side...");
-  const tx1 = await bet.deposit(0, { value: PRO_DEPOSIT }); // Side.Passes = 0
+  console.log("Depositing", hre.ethers.formatEther(PASSES_DEPOSIT), "cBTC on Passes side...");
+  const tx1 = await bet.deposit(0, { value: PASSES_DEPOSIT }); // Side.Passes = 0
   await tx1.wait();
   console.log("Passes deposit tx:", tx1.hash);
 
-  console.log("Depositing", hre.ethers.formatEther(ANTI_DEPOSIT), "cBTC on Fails side...");
-  const tx2 = await bet.deposit(1, { value: ANTI_DEPOSIT }); // Side.Fails = 1
+  console.log("Depositing", hre.ethers.formatEther(FAILS_DEPOSIT), "cBTC on Fails side...");
+  const tx2 = await bet.deposit(1, { value: FAILS_DEPOSIT }); // Side.Fails = 1
   await tx2.wait();
   console.log("Fails deposit tx:", tx2.hash);
 
@@ -86,7 +86,7 @@ async function main() {
   const gasCost = receipt4!.gasUsed * receipt4!.gasPrice;
   const netGain = balAfter - balBefore + gasCost;
   console.log("Payout received:", hre.ethers.formatEther(netGain), "cBTC");
-  console.log("Expected payout:", hre.ethers.formatEther(PRO_DEPOSIT + ANTI_DEPOSIT), "cBTC (total pool, since only anti depositor)");
+  console.log("Expected payout:", hre.ethers.formatEther(PASSES_DEPOSIT + FAILS_DEPOSIT), "cBTC (total pool, since only fails depositor)");
 
   const finalBalance = await hre.ethers.provider.getBalance(addr);
   console.log("\nFinal balance:", hre.ethers.formatEther(finalBalance), "cBTC");
