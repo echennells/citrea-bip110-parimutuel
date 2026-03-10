@@ -1,9 +1,8 @@
 # BIP-110 Bet
 
-A trustless prediction market on whether Bitcoin enforces the OP_RETURN size limit (BIP-110). Both sides deposit cBTC into an escrow contract on [Citrea](https://citrea.xyz) (a Bitcoin L2). The contract settles by verifying real Bitcoin transactions via Citrea's built-in Bitcoin Light Client.
+A trustless prediction market on whether BIP-110 is activated on Bitcoin.
 
-- **BIP-110-Fails** wins by proving a >100 byte OP_RETURN was mined before a deadline
-- **BIP-110-Passes** wins if no proof is submitted by the deadline
+Both sides deposit cBTC into an escrow contract on [Citrea](https://citrea.xyz) (a Bitcoin L2). After the BIP-110 activation block, anyone can prove that a transaction with an OP_RETURN over 100 bytes was mined — if such a transaction exists, BIP-110 was not enforced and the **BIP-110-Fails** side wins. If nobody submits a valid proof within 2016 blocks (~2 weeks, one difficulty period), the funds go to the **BIP-110-Passes** side.
 
 
 ## How It Works
@@ -18,7 +17,7 @@ The `prove()` function verifies a real Bitcoin transaction on-chain:
 
 ## Contracts
 
-These are Solidity smart contracts (`.sol`) — the EVM language used by Citrea, Ethereum, and others (not Solana). They run on Citrea's EVM, which is a Bitcoin L2 that settles to Bitcoin.
+These are EVM smart contracts written in Solidity. Citrea is a Bitcoin L2 that runs an EVM and settles to Bitcoin.
 
 | Contract | What |
 |----------|------|
