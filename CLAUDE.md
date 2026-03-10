@@ -2,8 +2,10 @@
 
 ## Project Overview
 
-Trustless prediction market on BIP-110 activation, deployed on Citrea (Bitcoin L2 with EVM).
+Trustless parimutuel prediction market on BIP-110 activation, deployed on Citrea (Bitcoin L2 with EVM).
 The contract checks for >100 byte OP_RETURNs in real Bitcoin blocks via Citrea's Light Client.
+
+**This is a testnet project.** All contracts, scripts, and tests target Citrea testnet (chain 5115) and Bitcoin testnet4. The contract has not been professionally audited and should not be used with real funds. The deadline (activation block) is configurable at deploy time. The e2e test scripts set short deadlines for quick testing.
 
 ## Key Architecture
 
