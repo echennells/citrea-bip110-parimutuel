@@ -19,12 +19,14 @@ The `prove()` function verifies a real Bitcoin transaction on-chain:
 
 ## Contracts
 
+These are Solidity smart contracts (`.sol`) — the EVM language used by Citrea, Ethereum, and others (not Solana). They run on Citrea's EVM, which is a Bitcoin L2 that settles to Bitcoin.
+
 | Contract | What |
 |----------|------|
-| `BIP110Bet.sol` | Escrow betting pool — deposit, prove, timeout, withdraw |
-| `OpReturnParser.sol` | Pure Solidity Bitcoin transaction parser (SegWit, VarInt, PUSHDATA1/2) |
-| `BIP110Verifier.sol` | Phase 2 predecessor — same verification, hashlock reveal instead of bet |
-| `IBitcoinLightClient.sol` | Interface to Citrea's system precompile at `0x31...0001` |
+| `BIP110Bet.sol` | The main contract. Holds deposited cBTC in escrow, accepts Bitcoin transaction proofs to settle the bet, and pays out winners proportionally from the pool. |
+| `OpReturnParser.sol` | Parses raw Bitcoin transactions in Solidity. Handles SegWit, VarInt encoding, and PUSHDATA opcodes to extract OP_RETURN payloads and their sizes. |
+| `BIP110Verifier.sol` | Earlier version of the verification logic. Same Bitcoin proof checking, but reveals a hashlock preimage instead of settling a bet. Kept for reference. |
+| `IBitcoinLightClient.sol` | Interface to Citrea's built-in Bitcoin Light Client — a system contract that tracks Bitcoin block headers and can verify that a transaction was included in a real Bitcoin block via witness Merkle proof. |
 
 ## Setup
 
