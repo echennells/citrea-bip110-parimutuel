@@ -5,7 +5,6 @@ A trustless prediction market on whether Bitcoin enforces the OP_RETURN size lim
 - **BIP-110-Fails** wins by proving a >100 byte OP_RETURN was mined before a deadline
 - **BIP-110-Passes** wins if no proof is submitted by the deadline
 
-No oracle, no trusted third party. The only trust assumptions are Bitcoin PoW and the Citrea sequencer.
 
 ## How It Works
 
